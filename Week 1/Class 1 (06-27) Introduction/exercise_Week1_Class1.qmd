@@ -44,7 +44,7 @@ Answer:
 
 Why is systematically testing an idea against data more reliable than trusting intuition or "conventional wisdom"? You may use an example (such as Dr. John Snow and the 1854 cholera outbreak) to illustrate your point.
 
-Answer:
+Answer: 
 
 \vspace{2cm}
 
