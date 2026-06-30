@@ -22,9 +22,10 @@ opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = FALSE)
 library(knitr)
 library(formatR)
 library(tidyverse)
-args <- commandArgs(trailingOnly = FALSE)
-script <- sub("^--file=", "", args[grep("^--file=", args)])
-setwd(dirname(normalizePath(script)))
+if (requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable()) {
+  .doc_path <- rstudioapi::getSourceEditorContext()$path
+  if (length(.doc_path) == 1 && nzchar(.doc_path)) setwd(dirname(.doc_path))
+}
 opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = FALSE)
 ```
 
@@ -36,23 +37,30 @@ opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = FALSE)
 
 In your own words, what is *quantitative* political analysis, and why might it matter even for someone who never works in politics professionally?
 
-Answer:
+Answer: 
+Quantitative political analysis is the study of politics using statistical methods and other data-based evidence. In quantitative political analysis, researchers test hypotheses via the scientific method, conduct studies to measure public opinion, and evaluate policies using data points, and or analyze election outcomes. 
+
+Quantitative political analysis may matter to someone outside of professional politics because it shapes the Democratic process and policy outcomes. Legislators consult quantitative political polls to gauge public opinion, which then shapes how they vote and, therefore, the policies that affect citizens. Thus, understanding quantitative political analysis helps citizens stay engaged and hold their leaders accountable. 
+
 
 \vspace{2cm}
 
 ## 2. Why Scientific Testing Is Important
 
-Why is systematically testing an idea against data more reliable than trusting intuition or "conventional wisdom"? You may use an example (such as Dr. John Snow and the 1854 cholera outbreak) to illustrate your point.
+Answer:
+
+Simply put, intuition can be(and often is)wrong. The 1854 Cholera outbreak demonstrates how data can guide researchers by identifying patterns. These patterns can then enable us to ask better questions and get closer to finding the truth. Dr. John Snow challenged "conventional wisdom" and, by doing so, corrected misleading information that would otherwise have continued to spread cholera. Having data gave him greater ethos to persuade the public, but following the scientific method is also crucial, as it requires falsifiability. In the footsteps of John Stuart Mill, without challenging preconceived ideas, we can not fully discover the truth. 
+
 
 Answer: 
-
+While not completely devoid of bias, science allows us to better pinpoint cause and effect relationships through the scientific method. John Snow
 \vspace{2cm}
 
 ## 3. The Role of AI in This Class
 
 In this course, AI handles much of the technical work of writing code. What does that free *you* to focus on, and why might those skills be more valuable than memorizing syntax?
 
-Answer:
+Answer: AI is a crucial tool that handles the tedious mechanical work, freeing us to analyze data, pursue further research inquiries, and discover new knowledge. By having AI handle the code work, I can explore topics with greater depth and answer the questions I am actually curious about. In the real world, your boss will expect you to use AI because they want the task to be done in the best way possible. Memorizing is time-consuming, and as technology progresses, it will be increasingly difficult to keep pace without AI. 
 
 \vspace{2cm}
 
@@ -61,6 +69,11 @@ Answer:
 AI is powerful but not infallible. Describe **two** ways an AI could produce an answer that is technically correct but still misleading, and explain why you should always verify what the AI gives you.
 
 Answer:
+AI confuses correlation with causation. Meaning AI may overemphasize the relationship between 2 variables. Similarly, AI can fish for biased data, and as such, the sample is not random. 
+
+
+With any project, it is crucial to check over someone’s work. Given that AI can hallucinate, we want to ensure that our study is truly focused on finding the truth rather than on a desired outcome. 
+
 
 \newpage
 
@@ -105,6 +118,8 @@ We'll start at the very beginning: getting the data into R and taking a first lo
 ```{r}
 # Load the dataset
 nat_pol_attitudes <- read_csv("data/nat_pol_attitudes.csv")
+nat_pol_attitudes <- read_csv("data/nat_pol_attitudes.csv")
+glimpse(nat_pol_attitudes)
 
 # Explore the structure of the data
 glimpse(nat_pol_attitudes)
@@ -115,7 +130,8 @@ glimpse(nat_pol_attitudes)
 Ask Claude to help you calculate the **average (mean) age** of all respondents in the dataset.
 
 ```{r}
-
+nat_pol_attitudes |>
+  summarise(mean_age = mean(age))
 ```
 
 ### 5.3 Average Age by Party
@@ -123,7 +139,9 @@ Ask Claude to help you calculate the **average (mean) age** of all respondents i
 Now build on that. Ask Claude to calculate the **average age separately for each party** (`party_id`). How do the parties compare?
 
 ```{r}
-
+nat_pol_attitudes |>
+  group_by(party_id) |>
+  summarise(mean_age = mean(age))
 ```
 
 ### 5.4 Average Trust in Government by Party
@@ -131,7 +149,9 @@ Now build on that. Ask Claude to calculate the **average age separately for each
 Using the same idea, ask Claude to calculate the **average `trust_gov` score for each party**. Which party trusts government the most?
 
 ```{r}
-
+nat_pol_attitudes |>
+  group_by(party_id) |>
+  summarise(mean_trust = mean(trust_gov))
 ```
 
 ### 5.5 Support for Environmental Regulation
@@ -139,7 +159,8 @@ Using the same idea, ask Claude to calculate the **average `trust_gov` score for
 `policy_support_env` is 0/1 (1 = supports the policy). The **average of a 0/1 variable is a rate** — the share of people who support it. Ask Claude to calculate the **overall share of respondents who support environmental regulation**.
 
 ```{r}
-
+nat_pol_attitudes |>
+  summarise(support_env = mean(policy_support_env))
 ```
 
 ### 5.6 Gun-Law Support by Party
@@ -147,7 +168,9 @@ Using the same idea, ask Claude to calculate the **average `trust_gov` score for
 Ask Claude to calculate the **share who support stricter gun laws** (`policy_support_guns`) **for each party**. (Look closely at the result — does the pattern match what you expected? Keep this in mind for the next dataset.)
 
 ```{r}
-
+nat_pol_attitudes |>
+  group_by(party_id) |>
+  summarise(support_guns = mean(policy_support_guns))
 ```
 
 ## 6. Election Returns by Precinct
@@ -186,7 +209,8 @@ glimpse(precinct_elections)
 The `turnout` column is a **count** of voters, not a percentage. To get a turnout *rate*, divide it by the number of registered voters: `turnout / reg_voters`. Ask Claude to calculate the **average turnout rate across all precincts**.
 
 ```{r}
-
+precinct_elections |>
+  summarise(mean_turnout = mean(turnout / reg_voters))
 ```
 
 ### 6.3 Turnout Rate by Income
@@ -194,7 +218,11 @@ The `turnout` column is a **count** of voters, not a percentage. To get a turnou
 Do richer precincts vote at higher rates? Ask Claude to split precincts into **four groups by `median_income`** (income quartiles) and calculate the **average turnout rate within each group**. What do you find?
 
 ```{r}
-
+precinct_elections |>
+  mutate(turnout_rate = turnout / reg_voters) |>
+  mutate(income_quartile = ntile(median_income, 4)) |>
+  group_by(income_quartile) |>
+  summarise(mean_turnout = mean(turnout_rate))
 ```
 
 ## 7. Congressional Press Releases
@@ -217,12 +245,9 @@ Do richer precincts vote at higher rates? Ask Claude to split precincts into **f
 - `contains_attack`: Indicator of partisan attack language (binary)
 
 ### 7.1 Load the Data
-
 ```{r}
 # Load the dataset
 congress_press <- read_csv("data/congress_press.csv")
-
-# Look at the data structure
 glimpse(congress_press)
 ```
 
@@ -231,15 +256,18 @@ glimpse(congress_press)
 `contains_attack` is 0/1, so its average is a rate. Ask Claude to calculate the **share of press releases that contain attack language, for each party**. Which party uses attack language most often in this data?
 
 ```{r}
-
+congress_press |>
+  group_by(party) |>
+  summarise(attack_rate = mean(contains_attack))
 ```
-
 ### 7.3 Average Sentiment by Party
 
 Finally, ask Claude to calculate the **average `sentiment_score` for each party**. Are the differences large or small?
 
 ```{r}
-
+congress_press |>
+  group_by(party) |>
+  summarise(mean_sentiment = mean(sentiment_score))
 ```
 
 \newpage
